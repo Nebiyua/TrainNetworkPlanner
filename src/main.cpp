@@ -5,24 +5,21 @@ using namespace std;
 
 int main() {
     Graph myNetwork;
+    myNetwork.addStation("A", "A");
+    myNetwork.addStation("B", "B");
+    myNetwork.addStation("C", "C");
 
-    cout << "=== Building the Network ===" << endl;
+    // A -> B (60 mins), B -> C (60 mins) = Total 120
+    myNetwork.addTrack("A", "B", 100, 60);
+    myNetwork.addTrack("B", "C", 100, 60);
     
-    // 1. Add Stations
-    myNetwork.addStation("Addis Ababa", "ADD");
-    myNetwork.addStation("Adama", "ADM");
-    myNetwork.addStation("Dire Dawa", "DD");
+    // A -> C Direct (100 mins) = Faster!
+    myNetwork.addTrack("A", "C", 200, 100);
 
-    // 2. Add Tracks
-    // Addis -> Adama
-    myNetwork.addTrack("Addis Ababa", "Adama", 100, 60);
-    // Adama -> Dire Dawa
-    myNetwork.addTrack("Adama", "Dire Dawa", 350, 240);
-    // Error Test
-    myNetwork.addTrack("Addis Ababa", "London", 5000, 999);
-
-    // 3. List
-    myNetwork.listStations();
+    cout << "Checking connectivity A -> C: " << myNetwork.isPathExisting("A", "C") << endl;
+    
+    cout << "Calculating Fastest Route A -> C..." << endl;
+    myNetwork.getFastestRoute("A", "C"); // Should pick the Direct 100min route, not the 120min one
 
     return 0;
 }

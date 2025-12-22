@@ -73,3 +73,17 @@ void BST::inorderRecursive(BSTNode* node) {
 BSTNode* BST::getRoot() {
     return root;
 }
+
+BSTNode* BST::searchStationById(int id) {
+    return searchByIdRecursive(root, id);
+}
+
+BSTNode* BST::searchByIdRecursive(BSTNode* node, int id) {
+    if (node == nullptr) return nullptr;
+    if (node->data.id == id) return node;
+    
+    BSTNode* foundLeft = searchByIdRecursive(node->left, id);
+    if (foundLeft) return foundLeft;
+    
+    return searchByIdRecursive(node->right, id);
+}
