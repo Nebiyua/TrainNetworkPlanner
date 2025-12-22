@@ -1,50 +1,28 @@
 #include <iostream>
-#include "../include/Stack.h"
-#include "../include/Queue.h"
+#include "../include/Graph.h"
 
 using namespace std;
 
 int main() {
-    // --- TEST 1: The Stack (Undo History) ---
-    cout << "=== Testing Stack (History) ===" << endl;
-    Stack history;
-    
-    // Simulate user doing things
-    cout << "User added Station A..." << endl;
-    history.push("Added Station A");
-    
-    cout << "User added Station B..." << endl;
-    history.push("Added Station B");
-    
-    cout << "User added Track A->B..." << endl;
-    history.push("Added Track A->B");
+    Graph myNetwork;
 
-    // Print current history
-    history.printHistory();
-
-    // Simulate Undo
-    cout << "\n[User presses Undo]..." << endl;
-    string lastAction = history.pop();
-    cout << "Undid action: " << lastAction << endl;
+    cout << "=== Building the Network ===" << endl;
     
-    cout << "\nNew History:" << endl;
-    history.printHistory();
+    // 1. Add Stations
+    myNetwork.addStation("Addis Ababa", "ADD");
+    myNetwork.addStation("Adama", "ADM");
+    myNetwork.addStation("Dire Dawa", "DD");
 
+    // 2. Add Tracks
+    // Addis -> Adama
+    myNetwork.addTrack("Addis Ababa", "Adama", 100, 60);
+    // Adama -> Dire Dawa
+    myNetwork.addTrack("Adama", "Dire Dawa", 350, 240);
+    // Error Test
+    myNetwork.addTrack("Addis Ababa", "London", 5000, 999);
 
-    // --- TEST 2: The Queue (BFS Line) ---
-    cout << "\n=== Testing Queue (Processing Line) ===" << endl;
-    Queue line;
-    
-    cout << "Enqueuing Station IDs: 10, 20, 30" << endl;
-    line.enqueue(10);
-    line.enqueue(20);
-    line.enqueue(30);
-
-    cout << "Dequeuing (Should be 10): " << line.dequeue() << endl;
-    cout << "Dequeuing (Should be 20): " << line.dequeue() << endl;
-    
-    if (line.isEmpty()) cout << "Queue is empty!" << endl;
-    else cout << "Queue still has items." << endl;
+    // 3. List
+    myNetwork.listStations();
 
     return 0;
 }

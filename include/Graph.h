@@ -3,6 +3,7 @@
 
 #include "BST.h"
 #include "Stack.h"
+#include "Queue.h"
 #include <vector>
 
 class Graph {
@@ -19,7 +20,7 @@ public:
     void addTrack(string fromStation, string toStation, int dist, int time);
     void listStations();
 
-    // Advanced (We will implement these on Day 3/4)
+    // Advanced
     void getShortestPath(string start, string end);
     void checkConnectivity();
 
