@@ -21,6 +21,22 @@ void Graph::addStation(string name, string code) {
     cout << "Success: Station '" << name << "' added with ID " << (nextId - 1) << endl;
 }
 
+void Graph::deleteStation(string name) {
+    // Check if station exists
+    BSTNode* node = stationRegistry.searchStation(name);
+    if (!node) {
+        cout << "Error: Station '" << name << "' not found!" << endl;
+        return;
+    }
+
+    // Delete from BST
+    stationRegistry.deleteStation(name);
+
+    actionHistory.push("Deleted Station: " + name);
+
+    cout << "Success: Station '" << name << "' deleted." << endl;
+}
+
 void Graph::addTrack(string fromStation, string toStation, int dist, int time) {
     BSTNode* sourceNode = stationRegistry.searchStation(fromStation);
     

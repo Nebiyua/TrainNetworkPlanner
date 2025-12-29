@@ -20,6 +20,7 @@ public:
 
     // 1. Basic Operations
     void addStation(string name, string code);
+    void deleteStation(string name);
     void addTrack(string fromStation, string toStation, int dist, int time);
     void listStations();
 
