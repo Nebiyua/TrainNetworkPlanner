@@ -27,10 +27,12 @@ private:
     BSTNode* searchByIdRecursive(BSTNode* node, int id);
     void inorderRecursive(BSTNode* node); // For printing A-Z
     void deleteTree(BSTNode* node);
+    BSTNode* deleteByMerging(BSTNode* node, string name);
 
 public:
     BST();
     ~BST();
+    void deleteStation( string name);
 
     void addStation(string name, string code, int id);
     BSTNode* searchStation(string name);

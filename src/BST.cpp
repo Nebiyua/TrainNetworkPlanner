@@ -18,6 +18,39 @@ BST::~BST() {
     deleteTree(root);
 }
 
+
+void BST::deleteStation(string name) {
+    root = deleteByMerging(root, name);
+}
+
+
+BSTNode* BST::deleteByMerging(BSTNode* node, string name) {
+    if (!node) return nullptr;
+
+    if (name < node->data.name) {
+        node->left = deleteByMerging(node->left, name);
+    } else if (name > node->data.name) {
+        node->right = deleteByMerging(node->right, name);
+    } else { // Found node to delete
+        BSTNode* tmp = node;
+        if (!node->left) {
+            node = node->right;
+        } else if (!node->right) {
+            node = node->left;
+        } else {
+            // Merge left and right subtrees
+            BSTNode* leftSubtree = node->left;
+            BSTNode* rightMost = leftSubtree;
+            while (rightMost->right)
+                rightMost = rightMost->right;
+            rightMost->right = node->right;
+            node = leftSubtree;
+        }
+        delete tmp;
+    }
+    return node;
+}
+
 void BST::addStation(string name, string code, int id) {
     Station newStation(name, code, id);
     root = insertRecursive(root, newStation);
