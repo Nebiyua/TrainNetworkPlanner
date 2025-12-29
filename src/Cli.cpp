@@ -45,12 +45,15 @@ private:
         std::cout << " Train Network Planner (CLI)\n";
         std::cout << "=============================\n";
         std::cout << "1) Add station\n";
-        std::cout << "2) Add track\n";
-        std::cout << "3) List stations\n";
-        std::cout << "4) Connectivity check (path exists)\n";
-        std::cout << "5) Fastest route (Dijkstra)\n";
-        std::cout << "6) Load data\n";
-        std::cout << "7) Save data\n";
+        std::cout << "2) Add station\n";
+
+        std::cout << "3) Add track\n";
+        std::cout << "4) List stations\n";
+        std::cout << "5) Connectivity check (path exists)\n";
+        std::cout << "6) Fastest route (Dijkstra)\n";
+
+        std::cout << "7) Load data\n";
+        std::cout << "8) Save data\n";
         std::cout << "0) Exit\n";
     }
 
@@ -99,7 +102,31 @@ private:
         }
 
         graph_.addStation(name, code);
-        std::cout << "Station added (or updated if your BST handles duplicates).\n";
+        std::cout << "Station added\n";
+    }
+
+       void handleDeleteStation() {
+        std::string name = readLine("Station name: ");
+       
+
+        if (name.empty()) {
+            std::cout << "Name cannot be empty.\n";
+            return;
+        }
+
+        graph_.deleteStation(name);
+        std::cout << "Station deleted .\n";
+    }
+
+    
+       void handleNetworkHealthOverview() {
+       
+       
+
+       
+
+        graph_.networkHealthOverview();
+        
     }
 
     // Graph::addTrack(string fromStation, string toStation, int dist, int time)

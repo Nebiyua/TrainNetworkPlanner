@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <climits> // For INT_MAX (Infinity)
 #include <map>     // Easier to map ID -> Distance
+#include <unordered_map>
+#include <unordered_set>
 
 using namespace std;
 
@@ -126,6 +128,164 @@ bool Graph::isPathExisting(string start, string end) {
 
     return false; // Queue empty, never found target
 }
+
+
+
+// Helper DFS for bridges (Tarjan) on UNDIRECTED adjacency list
+static void bridgeDfs(
+    int u,
+    int& timer,
+    const std::vector<std::vector<int>>& adj,
+    std::vector<int>& disc,
+    std::vector<int>& low,
+    std::vector<int>& parent,
+    std::vector<std::pair<int,int>>& bridges
+) {
+    disc[u] = low[u] = ++timer;
+
+    for (int v : adj[u]) {
+        if (disc[v] == -1) {
+            parent[v] = u;
+            bridgeDfs(v, timer, adj, disc, low, parent, bridges);
+
+            low[u] = std::min(low[u], low[v]);
+
+            // Bridge condition in undirected graph
+            if (low[v] > disc[u]) {
+                bridges.push_back({u, v});
+            }
+        } else if (v != parent[u]) {
+            low[u] = std::min(low[u], disc[v]);
+        }
+    }
+}
+
+void Graph::networkHealthOverview() {
+    // 0) Collect all stations from BST
+    std::vector<BSTNode*> nodes;
+    stationRegistry.collectNodes(nodes);
+
+    if (nodes.empty()) {
+        cout << "Network Health Overview: No stations in the network.\n";
+        return;
+    }
+
+    // 1) Build ID <-> index mapping (IDs may not be contiguous after deletes)
+    int n = (int)nodes.size();
+    std::unordered_map<int,int> idToIdx;
+    std::vector<int> idxToId(n);
+    std::vector<std::string> idxToName(n);
+
+    for (int i = 0; i < n; i++) {
+        int id = nodes[i]->data.id;
+        idToIdx[id] = i;
+        idxToId[i] = id;
+        idxToName[i] = nodes[i]->data.name; // adjust if your field name differs
+    }
+
+    // 2) Compute in-degree and out-degree and build undirected adjacency (for bridges)
+    std::vector<int> indeg(n, 0), outdeg(n, 0);
+
+    // Use set per node to avoid duplicate neighbors (multiple tracks)
+    std::vector<std::unordered_set<int>> undirectedNbrSet(n);
+
+    for (int i = 0; i < n; i++) {
+        BSTNode* uNode = nodes[i];
+        int uId = uNode->data.id;
+
+        Track* t = uNode->tracks.getHead();
+        while (t != nullptr) {
+            int vId = t->destinationStationId;
+
+            auto it = idToIdx.find(vId);
+            if (it != idToIdx.end()) {
+                int u = i;
+                int v = it->second;
+
+                outdeg[u] += 1;
+                indeg[v] += 1;
+
+                // undirected view: add both directions
+                undirectedNbrSet[u].insert(v);
+                undirectedNbrSet[v].insert(u);
+            }
+            t = t->next;
+        }
+    }
+
+    // Convert neighbor sets to adjacency list for bridge algorithm
+    std::vector<std::vector<int>> adj(n);
+    for (int i = 0; i < n; i++) {
+        adj[i].assign(undirectedNbrSet[i].begin(), undirectedNbrSet[i].end());
+    }
+
+    // 3) Isolated stations: indeg=0 and outdeg=0
+    std::vector<int> isolatedIdx;
+    for (int i = 0; i < n; i++) {
+        if (indeg[i] == 0 && outdeg[i] == 0) isolatedIdx.push_back(i);
+    }
+
+    // 4) Busiest stations: max(total degree = in + out)
+    int maxTotal = 0;
+    for (int i = 0; i < n; i++) {
+        maxTotal = std::max(maxTotal, indeg[i] + outdeg[i]);
+    }
+
+    std::vector<int> busiestIdx;
+    for (int i = 0; i < n; i++) {
+        if (indeg[i] + outdeg[i] == maxTotal) busiestIdx.push_back(i);
+    }
+
+    // 5) Bridges (critical links) on undirected adjacency
+    std::vector<int> disc(n, -1), low(n, -1), parent(n, -1);
+    std::vector<std::pair<int,int>> bridges;
+    int timer = 0;
+
+    for (int i = 0; i < n; i++) {
+        if (disc[i] == -1) {
+            bridgeDfs(i, timer, adj, disc, low, parent, bridges);
+        }
+    }
+
+    // 6) Print overview
+    cout << "\n=============================\n";
+    cout << " Network Health Overview\n";
+    cout << "=============================\n";
+
+    cout << "Total stations: " << n << "\n";
+
+    cout << "\nIsolated stations (no incoming/outgoing tracks): ";
+    if (isolatedIdx.empty()) {
+        cout << "None\n";
+    } else {
+        cout << "\n";
+        for (int i : isolatedIdx) {
+            cout << " - " << idxToName[i] << " (ID " << idxToId[i] << ")\n";
+        }
+    }
+
+    cout << "\nBusiest station(s) by total degree (in+out = " << maxTotal << "):\n";
+    for (int i : busiestIdx) {
+        cout << " - " << idxToName[i]
+             << " (ID " << idxToId[i]
+             << "), in=" << indeg[i] << ", out=" << outdeg[i]
+             << ", total=" << (indeg[i] + outdeg[i]) << "\n";
+    }
+
+    cout << "\nCritical links (bridges) in UNDIRECTED network view:\n";
+    if (bridges.empty()) {
+        cout << " - None (no single link disconnects the network)\n";
+    } else {
+        for (auto [u, v] : bridges) {
+            // Print as station names
+            cout << " - " << idxToName[u] << " <-> " << idxToName[v]
+                 << " (IDs " << idxToId[u] << " <-> " << idxToId[v] << ")\n";
+        }
+    }
+
+    cout << "=============================\n";
+}
+
 
 void Graph::getFastestRoute(string start, string end) {
     BSTNode* startNode = stationRegistry.searchStation(start);

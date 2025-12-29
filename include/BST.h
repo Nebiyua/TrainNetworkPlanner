@@ -28,6 +28,7 @@ private:
     void inorderRecursive(BSTNode* node); // For printing A-Z
     void deleteTree(BSTNode* node);
     BSTNode* deleteByMerging(BSTNode* node, string name);
+    void collectNodesInorder(BSTNode* node, std::vector<BSTNode*>& out) const;
 
 public:
     BST();
@@ -41,6 +42,7 @@ public:
     
     // We need to expose the root for advanced Graph algorithms later
     BSTNode* getRoot(); 
+    void collectNodes(std::vector<BSTNode*>& out) const;
 };
 
 #endif

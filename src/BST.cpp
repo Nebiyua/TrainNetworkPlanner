@@ -23,6 +23,17 @@ void BST::deleteStation(string name) {
     root = deleteByMerging(root, name);
 }
 
+void BST::collectNodes(std::vector<BSTNode*>& out) const {
+    collectNodesInorder(root, out); // root = your BST root pointer
+}
+
+void BST::collectNodesInorder(BSTNode* node, std::vector<BSTNode*>& out) const {
+    if (!node) return;
+    collectNodesInorder(node->left, out);
+    out.push_back(node);
+    collectNodesInorder(node->right, out);
+}
+
 
 BSTNode* BST::deleteByMerging(BSTNode* node, string name) {
     if (!node) return nullptr;

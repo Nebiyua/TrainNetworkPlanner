@@ -26,6 +26,9 @@ private:
     // -------- Menu actions mapped to Graph.h --------
     void handleAddStation();       // -> graph_.addStation(name, code)
     void handleAddTrack();         // -> graph_.addTrack(from, to, dist, time)
+
+    void handleDeleteStation();
+    void handleNetworkHealthOverview();
     void handleListStations();     // -> graph_.listStations()
     void handleConnectivity();     // -> graph_.isPathExisting(start, end)
     void handleFastestRoute();     // -> graph_.getFastestRoute(start, end)

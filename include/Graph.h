@@ -23,6 +23,7 @@ public:
     void deleteStation(string name);
     void addTrack(string fromStation, string toStation, int dist, int time);
     void listStations();
+    void networkHealthOverview();
 
     // 2. Connectivity (BFS)
     // Old placeholder (can keep or remove)
