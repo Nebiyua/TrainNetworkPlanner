@@ -3,37 +3,44 @@
 
 #include <string>
 
-// Your backend class is named Graph (from Graph.h)
+
 class Graph;
+
 
 class TrainPlannerCLI {
 public:
-    // CLI operates on an existing Graph instance (owned elsewhere).
     explicit TrainPlannerCLI(Graph& graph);
-
-    // Starts the interactive loop (menu -> actions -> repeat).
     void run();
 
 private:
     Graph& graph_;
 
-    // -------- UI helpers --------
-    void printMenu() const;
+    // TUI state
+    int selectedMenuIndex_ = 0;
+    bool running_ = true;
+
+    // TUI helpers
+    void drawUI() const;
+    void handleKeyPress(int key);
+    void clearScreen() const;
+    void printMenuPane() const;
+    void printDetailsPane() const;
+
+    // Input helpers
     int  readInt(const std::string& prompt, int minVal, int maxVal);
     std::string readLine(const std::string& prompt);
     void pause() const;
 
-    // -------- Menu actions mapped to Graph.h --------
-    void handleAddStation();       // -> graph_.addStation(name, code)
-    void handleAddTrack();         // -> graph_.addTrack(from, to, dist, time)
-
+    // Menu actions
+    void handleAddStation();
+    void handleAddTrack();
     void handleDeleteStation();
     void handleNetworkHealthOverview();
-    void handleListStations();     // -> graph_.listStations()
-    void handleConnectivity();     // -> graph_.isPathExisting(start, end)
-    void handleFastestRoute();     // -> graph_.getFastestRoute(start, end)
-    void handleLoadData();         // -> graph_.loadData()
-    void handleSaveData();         // -> graph_.saveData()
+    void handleListStations();
+    void handleConnectivity();
+    void handleFastestRoute();
+    void handleLoadData();
+    void handleSaveData();
     void handleHelp() const;
 };
 
