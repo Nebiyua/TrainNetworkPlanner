@@ -1,5 +1,6 @@
 #include <iostream>
 #include "../include/Graph.h"
+#include "../include/Cli.h"
 
 using namespace std;
 

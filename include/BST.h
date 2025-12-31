@@ -3,6 +3,7 @@
 
 #include "Station.h"
 #include "LinkedList.h"
+#include <vector>
 
 struct BSTNode {
     Station data;

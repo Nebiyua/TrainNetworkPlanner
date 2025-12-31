@@ -73,8 +73,13 @@ void Graph::getShortestPath(string start, string end) {
     cout << "Feature coming soon..." << endl;
 }
 
-void Graph::loadData() {}
-void Graph::saveData() {}
+void Graph::loadData() {
+
+    cout<<"loaded";
+}
+void Graph::saveData() {
+    cout<<"saved";
+}
 
 bool Graph::isPathExisting(string start, string end) {
     // 1. Get IDs

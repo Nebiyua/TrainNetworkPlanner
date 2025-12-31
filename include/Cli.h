@@ -19,14 +19,14 @@ private:
 
     // -------- UI helpers --------
     void printMenu() const;
-    int  readInt(const std::string& prompt, int minVal, int maxVal);
+    static void clearLine();
+    int readInt(const std::string& prompt, int minVal, int maxVal);
     std::string readLine(const std::string& prompt);
     void pause() const;
 
     // -------- Menu actions mapped to Graph.h --------
     void handleAddStation();       // -> graph_.addStation(name, code)
     void handleAddTrack();         // -> graph_.addTrack(from, to, dist, time)
-
     void handleDeleteStation();
     void handleNetworkHealthOverview();
     void handleListStations();     // -> graph_.listStations()
@@ -34,7 +34,6 @@ private:
     void handleFastestRoute();     // -> graph_.getFastestRoute(start, end)
     void handleLoadData();         // -> graph_.loadData()
     void handleSaveData();         // -> graph_.saveData()
-    void handleHelp() const;
 };
 
 #endif // TRAIN_PLANNER_CLI_H
