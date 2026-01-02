@@ -4,16 +4,14 @@
 #include <string>
 #include <limits>
 #include <cstring>
+
+
 #include <conio.h> // For _getch() on Windows
 #define CLEAR_SCREEN "\033[2J\033[H"
-#include "Cli.h"
-#include "Graph.h"
-#include <iostream>
-#include <string>
-#include <limits>
-#include <cstring>
-#include <cctype>
-#include <pdcurses.h>
+#define REVERSE_ON "\033[7m"
+#define REVERSE_OFF "\033[27m"
+#define COLOR_GREEN "\033[32m"
+#define COLOR_RESET "\033[0m"
 
 static const char* menuItems[] = {
     "Add Station",
@@ -32,79 +30,52 @@ static const int menuSize = sizeof(menuItems) / sizeof(menuItems[0]);
 TrainPlannerCLI::TrainPlannerCLI(Graph& graph) : graph_(graph), selectedMenuIndex_(0), running_(true) {}
 
 void TrainPlannerCLI::run() {
-    initscr();
-    cbreak();
-    noecho();
-    keypad(stdscr, TRUE);
-    curs_set(0);
-    start_color();
-    init_pair(1, COLOR_BLACK, COLOR_CYAN); // Highlight
-    init_pair(2, COLOR_GREEN, COLOR_BLACK); // Details
-
     while (running_) {
         drawUI();
-        int ch = getch();
+        int ch = _getch();
         handleKeyPress(ch);
     }
-    endwin();
+    clearScreen();
     std::cout << "Goodbye!\n";
 }
 
 void TrainPlannerCLI::drawUI() const {
-    clear();
-    int startx = 2, starty = 1;
-    int menuWidth = 16, detailsWidth = 36;
-    int totalWidth = menuWidth + detailsWidth + 3;
-    int totalHeight = menuSize + 4;
-
-    // Draw borders
-    mvhline(starty, startx, '-', totalWidth);
-    mvhline(starty + totalHeight - 1, startx, '-', totalWidth);
-    mvvline(starty, startx, '|', totalHeight);
-    mvvline(starty, startx + menuWidth + 1, '|', totalHeight);
-    mvvline(starty, startx + totalWidth, '|', totalHeight);
-    mvaddch(starty, startx, '+');
-    mvaddch(starty, startx + menuWidth + 1, '+');
-    mvaddch(starty, startx + totalWidth, '+');
-    mvaddch(starty + totalHeight - 1, startx, '+');
-    mvaddch(starty + totalHeight - 1, startx + menuWidth + 1, '+');
-    mvaddch(starty + totalHeight - 1, startx + totalWidth, '+');
-
-    // Headers
-    mvprintw(starty, startx + 2, "Menu");
-    mvprintw(starty, startx + menuWidth + 4, "Details");
-
-    // Menu items and details
+#ifdef _WIN32
+    system("cls");
+#else
+    std::cout << CLEAR_SCREEN;
+#endif
+    std::cout << "---------------- MENU ------------------------\n";
+    std::cout << "  Menu           Details\n";
+    std::cout << "----------------------------------------------\n";
     for (int i = 0; i < menuSize; ++i) {
-        int row = starty + 2 + i;
-        if (i == selectedMenuIndex_) {
-            attron(COLOR_PAIR(1));
-            mvprintw(row, startx + 2, "%-*s", menuWidth - 2, menuItems[i]);
-            attroff(COLOR_PAIR(1));
-        } else {
-            mvprintw(row, startx + 2, "%-*s", menuWidth - 2, menuItems[i]);
-        }
-        // Details
-        if (i == selectedMenuIndex_) {
-            attron(COLOR_PAIR(2));
-            mvprintw(row, startx + menuWidth + 4, "Details for %s", menuItems[i]);
-            attroff(COLOR_PAIR(2));
-        } else {
-            mvprintw(row, startx + menuWidth + 4, "%*s", detailsWidth - 2, "");
-        }
+        std::cout << "  ";
+        // Menu column (12 chars)
+        std::string menuStr = menuItems[i];
+        if (i == selectedMenuIndex_) menuStr = std::string(REVERSE_ON) + menuStr + std::string(REVERSE_OFF);
+        int menuLen = (int)menuStr.length();
+        std::cout << menuStr;
+        for (int j = menuLen; j < 12; ++j) std::cout << " ";
+        std::cout << "   ";
+        // Details column (29 chars)
+        std::string details = (i == selectedMenuIndex_) ? ("Details for " + std::string(menuItems[i])) : "";
+        int detailsLen = (int)details.length();
+        std::cout << details;
+        for (int j = detailsLen; j < 29; ++j) std::cout << " ";
+        std::cout << "\n";
+        // Optional: horizontal line between items
+        // if (i < menuSize - 1) std::cout << "----------------------------------------------\n";
     }
-
-    // Instructions
-    mvprintw(starty + totalHeight, startx, "Use UP/DOWN arrows to navigate, Enter to select, q to quit.");
-    refresh();
+    std::cout << "----------------------------------------------\n";
+    std::cout << "Use UP/DOWN arrows to navigate, Enter to select, q to quit.\n";
 }
 
 void TrainPlannerCLI::handleKeyPress(int key) {
-    if (key == KEY_UP) {
-        if (selectedMenuIndex_ > 0) --selectedMenuIndex_;
-    } else if (key == KEY_DOWN) {
-        if (selectedMenuIndex_ < menuSize - 1) ++selectedMenuIndex_;
-    } else if (key == 10 || key == KEY_ENTER) { // Enter key
+    if (key == 224) { // Arrow keys
+        key = _getch();
+        if (key == 72 && selectedMenuIndex_ > 0) selectedMenuIndex_--; // Up
+        if (key == 80 && selectedMenuIndex_ < menuSize - 1) selectedMenuIndex_++; // Down
+    } else if (key == '\r') { // Enter
         switch (selectedMenuIndex_) {
             case 0: handleAddStation(); break;
             case 1: handleAddTrack(); break;
