@@ -35,17 +35,50 @@ void Graph::addTrack(string fromStation, string toStation, int dist, int time) {
 // List all stations alphabetically
 void Graph::listStations() {
     cout << "\n--- Network Stations (Alphabetical) ---\n";
+    if (nextId == 1) {
+        cout << "Database is empty.\n";
+        return;
+    }
     stationRegistry.printAllStations();
 }
 
-// Placeholder
-void Graph::checkConnectivity() {
-    cout << "Feature coming soon..." << endl;
+// Check if there is a direct (1-hop) connection
+bool Graph::isDirectlyConnected(string start, string end) {
+    BSTNode* startNode = stationRegistry.searchStation(start);
+    BSTNode* endNode = stationRegistry.searchStation(end);
+    if (!startNode || !endNode) return false;
+
+    // Iterate through linked list to see if destination is there
+    Track* current = startNode->tracks.getHead();
+    while (current != nullptr) {
+        if (current->destinationStationId == endNode->data.id) {
+            return true; 
+        }
+        current = current->next;
+    }
+    return false;
 }
 
-// Placeholder
-void Graph::getShortestPath(string start, string end) {
-    cout << "Feature coming soon..." << endl;
+// Show network health (Isolated stations, Busiest station)
+void Graph::displayNetworkStats() {
+    vector<string> isolatedStations;
+    string busiestStation = "None";
+    int maxConnections = 0;
+
+    stationRegistry.getNetworkStats(isolatedStations, busiestStation, maxConnections);
+
+    cout << "\n--- Network Health Overview ---\n";
+    cout << "Busiest Station: " << busiestStation 
+         << " (" << maxConnections << " outgoing connections)\n";
+
+    cout << "Isolated Stations (Dead Ends): \n";
+    if (isolatedStations.empty()) {
+        cout << "   (None - Network is fully connected)\n";
+    } else {
+        for (const string& name : isolatedStations) {
+            cout << "   - " << name << endl;
+        }
+    }
 }
 
 // Save stations and tracks to CSV files
@@ -126,7 +159,8 @@ bool Graph::isPathExisting(string start, string end) {
 
     Queue q;
     q.enqueue(startId);
-    vector<int> visited{startId};
+    vector<int> visited;
+    visited.push_back(startId);
 
     while (!q.isEmpty()) {
         int currentId = q.dequeue();
@@ -137,7 +171,12 @@ bool Graph::isPathExisting(string start, string end) {
 
         for (Track* track = currentNode->tracks.getHead(); track; track = track->next) {
             int neighborId = track->destinationStationId;
-            if (find(visited.begin(), visited.end(), neighborId) == visited.end()) {
+            
+            // Check if visited (simple vector find)
+            bool found = false;
+            for(int v : visited) if(v == neighborId) found = true;
+
+            if (!found) {
                 visited.push_back(neighborId);
                 q.enqueue(neighborId);
             }
@@ -146,8 +185,8 @@ bool Graph::isPathExisting(string start, string end) {
     return false;
 }
 
-// Dijkstra-like algorithm to find the fastest route
-void Graph::getFastestRoute(string start, string end) {
+// Dijkstra Algorithm: Supports optimization by Time or Distance
+void Graph::getShortestPath(string start, string end, bool byTime) {
     BSTNode* startNode = stationRegistry.searchStation(start);
     BSTNode* endNode = stationRegistry.searchStation(end);
     if (!startNode || !endNode) {
@@ -158,16 +197,18 @@ void Graph::getFastestRoute(string start, string end) {
     int startId = startNode->data.id;
     int endId = endNode->data.id;
 
-    map<int, int> dist;          // Time from start
-    map<int, int> previous;      // For path reconstruction
+    map<int, int> dist;          // Shortest distance/time found
+    map<int, int> parent;        // For path reconstruction
     map<int, bool> visited;
 
     dist[startId] = 0;
 
-    for (int i = 0; i < 20; i++) { // Assume max 20 stations
+    // Run enough iterations to cover the graph
+    for (int i = 0; i < 100; i++) { 
         int u = -1;
         int minVal = INT_MAX;
 
+        // Find closest unvisited node
         for (auto const& [id, d] : dist) {
             if (!visited[id] && d < minVal) {
                 minVal = d;
@@ -181,15 +222,17 @@ void Graph::getFastestRoute(string start, string end) {
         BSTNode* uNode = stationRegistry.searchStationById(u);
         if (!uNode) continue;
 
+        // Relax neighbors
         for (Track* track = uNode->tracks.getHead(); track; track = track->next) {
             int v = track->destinationStationId;
-            int weight = track->weightTime;
+            // Toggle metric based on user choice
+            int weight = byTime ? track->weightTime : track->weightDistance;
 
             if (dist.find(v) == dist.end()) dist[v] = INT_MAX;
 
             if (dist[u] + weight < dist[v]) {
                 dist[v] = dist[u] + weight;
-                previous[v] = u;
+                parent[v] = u; // Track the path
             }
         }
     }
@@ -197,7 +240,29 @@ void Graph::getFastestRoute(string start, string end) {
     if (dist.find(endId) == dist.end() || dist[endId] == INT_MAX) {
         cout << "No route exists between " << start << " and " << end << endl;
     } else {
-        cout << "Fastest Route Time: " << dist[endId] << " minutes" << endl;
-        // Path reconstruction could be added here
+        string unit = byTime ? "minutes" : "km";
+        cout << "Result: " << dist[endId] << " " << unit << endl;
+
+        // Reconstruct path (without using <stack> header)
+        vector<string> path;
+        int curr = endId;
+        
+        // Backtrack from end to start
+        while (curr != startId) {
+            BSTNode* node = stationRegistry.searchStationById(curr);
+            path.push_back(node->data.name);
+            curr = parent[curr];
+        }
+        // Add start node
+        BSTNode* sNode = stationRegistry.searchStationById(startId);
+        path.push_back(sNode->data.name);
+
+        // Print in reverse (Start -> End)
+        cout << "Path: ";
+        for (int i = path.size() - 1; i >= 0; i--) {
+            cout << path[i];
+            if (i > 0) cout << " -> ";
+        }
+        cout << endl;
     }
 }

@@ -4,6 +4,8 @@
 #include <fstream>
 #include "Station.h"
 #include "LinkedList.h"
+#include <vector>
+#include <string>
 
 // Node of the Binary Search Tree
 struct BSTNode {
@@ -26,6 +28,7 @@ private:
     BSTNode* searchByIdRecursive(BSTNode* node, int id);
     void inorderRecursive(BSTNode* node);
     void deleteTree(BSTNode* node);
+    void getStatsRecursive(BSTNode* node, vector<string>& isolated, string& busiest, int& maxConnections);
     void saveStationsRecursive(BSTNode* node, ofstream& outFile);
     void saveTracksRecursive(BSTNode* node, ofstream& outFile);
 
@@ -37,6 +40,7 @@ public:
     BSTNode* searchStation(string name);
     BSTNode* searchStationById(int id);
     void printAllStations();
+    void getNetworkStats(vector<string>& isolated, string& busiest, int& maxConnections);
 
     void saveStationsToFile(ofstream& outFile);
     void saveTracksToFile(ofstream& outFile);

@@ -24,12 +24,15 @@ public:
     void listStations();
 
     // Connectivity (BFS)
-    void checkConnectivity();
     bool isPathExisting(string start, string end);
+    bool isDirectlyConnected(string start, string end); 
 
     // Shortest path
-    void getShortestPath(string start, string end);
+    void getShortestPath(string start, string end, bool byTime);
     void getFastestRoute(string start, string end);
+
+    //Analytics
+    void displayNetworkStats();
 
     // File I/O
     void loadData();

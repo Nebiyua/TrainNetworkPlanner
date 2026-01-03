@@ -1,5 +1,6 @@
 #include "../include/BST.h"
 #include <iostream>
+#include <vector>
 
 using namespace std;
 
@@ -74,6 +75,36 @@ BSTNode* BST::searchByIdRecursive(BSTNode* node, int id) {
 
     BSTNode* foundLeft = searchByIdRecursive(node->left, id);
     return foundLeft ? foundLeft : searchByIdRecursive(node->right, id);
+}
+
+// --- NETWORK HEALTH LOGIC ---
+
+void BST::getNetworkStats(vector<string>& isolated, string& busiest, int& maxConnections) {
+    maxConnections = -1;
+    getStatsRecursive(root, isolated, busiest, maxConnections);
+}
+
+void BST::getStatsRecursive(BSTNode* node, vector<string>& isolated, string& busiest, int& maxConnections) {
+    if (node != nullptr) {
+        int count = 0;
+        Track* current = node->tracks.getHead();
+        while (current != nullptr) {
+            count++;
+            current = current->next;
+        }
+
+        if (count == 0) {
+            isolated.push_back(node->data.name);
+        }
+
+        if (count > maxConnections) {
+            maxConnections = count;
+            busiest = node->data.name;
+        }
+
+        getStatsRecursive(node->left, isolated, busiest, maxConnections);
+        getStatsRecursive(node->right, isolated, busiest, maxConnections);
+    }
 }
 
 // --- File saving ---
