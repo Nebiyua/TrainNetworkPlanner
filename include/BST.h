@@ -29,6 +29,7 @@ private:
     void inorderRecursive(BSTNode* node);
     void deleteTree(BSTNode* node);
     void getStatsRecursive(BSTNode* node, vector<string>& isolated, string& busiest, int& maxConnections);
+    void collectNodesRecursive(BSTNode* node, vector<BSTNode*>& nodes);
     void saveStationsRecursive(BSTNode* node, ofstream& outFile);
     void saveTracksRecursive(BSTNode* node, ofstream& outFile);
 
@@ -41,6 +42,7 @@ public:
     BSTNode* searchStationById(int id);
     void printAllStations();
     void getNetworkStats(vector<string>& isolated, string& busiest, int& maxConnections);
+    void collectNodes(vector<BSTNode*>& nodes);
 
     void saveStationsToFile(ofstream& outFile);
     void saveTracksToFile(ofstream& outFile);

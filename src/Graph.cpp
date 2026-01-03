@@ -1,6 +1,8 @@
 #include "../include/Graph.h"
 #include <iostream>
 #include <vector>
+#include <unordered_map>
+#include <unordered_set>
 #include <algorithm>
 #include <climits>
 #include <map>
@@ -60,25 +62,142 @@ bool Graph::isDirectlyConnected(string start, string end) {
 }
 
 // Show network health (Isolated stations, Busiest station)
-void Graph::displayNetworkStats() {
-    vector<string> isolatedStations;
-    string busiestStation = "None";
-    int maxConnections = 0;
-
-    stationRegistry.getNetworkStats(isolatedStations, busiestStation, maxConnections);
-
-    cout << "\n--- Network Health Overview ---\n";
-    cout << "Busiest Station: " << busiestStation 
-         << " (" << maxConnections << " outgoing connections)\n";
-
-    cout << "Isolated Stations (Dead Ends): \n";
-    if (isolatedStations.empty()) {
-        cout << "   (None - Network is fully connected)\n";
-    } else {
-        for (const string& name : isolatedStations) {
-            cout << "   - " << name << endl;
+void bridgeDfs(int u, int& timer, const vector<vector<int>>& adj, 
+               vector<int>& disc, vector<int>& low, vector<int>& parent, 
+               vector<pair<int,int>>& bridges) {
+    disc[u] = low[u] = ++timer;
+    
+    for (int v : adj[u]) {
+        if (v == parent[u]) continue; // Don't go back to parent immediately
+        
+        if (disc[v] != -1) {
+            // Back-edge
+            low[u] = min(low[u], disc[v]);
+        } else {
+            // Tree-edge
+            parent[v] = u;
+            bridgeDfs(v, timer, adj, disc, low, parent, bridges);
+            low[u] = min(low[u], low[v]);
+            
+            // Bridge condition
+            if (low[v] > disc[u]) {
+                bridges.push_back({u, v});
+            }
         }
     }
+}
+
+void Graph::displayNetworkStats() {
+    // 0) Collect all stations from BST
+    vector<BSTNode*> nodes;
+    stationRegistry.collectNodes(nodes);
+
+    if (nodes.empty()) {
+        cout << "Network Health Overview: No stations in the network.\n";
+        return;
+    }
+
+    // 1) Build ID <-> index mapping
+    // We map arbitrary Station IDs (1, 5, 99) to a clean array index (0, 1, 2...)
+    int n = (int)nodes.size();
+    unordered_map<int,int> idToIdx;
+    vector<int> idxToId(n);
+    vector<string> idxToName(n);
+
+    for (int i = 0; i < n; i++) {
+        int id = nodes[i]->data.id;
+        idToIdx[id] = i;
+        idxToId[i] = id;
+        idxToName[i] = nodes[i]->data.name;
+    }
+
+    // 2) Compute Degrees & Build Undirected Adjacency for Bridges
+    vector<int> indeg(n, 0), outdeg(n, 0);
+    vector<unordered_set<int>> undirectedNbrSet(n);
+
+    for (int i = 0; i < n; i++) {
+        BSTNode* uNode = nodes[i];
+        
+        Track* t = uNode->tracks.getHead();
+        while (t != nullptr) {
+            int vId = t->destinationStationId;
+
+            if (idToIdx.count(vId)) {
+                int u = i;
+                int v = idToIdx[vId];
+
+                outdeg[u]++;
+                indeg[v]++;
+
+                // For bridges, we treat graph as undirected
+                undirectedNbrSet[u].insert(v);
+                undirectedNbrSet[v].insert(u);
+            }
+            t = t->next;
+        }
+    }
+
+    // Convert sets to vector for DFS
+    vector<vector<int>> adj(n);
+    for (int i = 0; i < n; i++) {
+        adj[i].assign(undirectedNbrSet[i].begin(), undirectedNbrSet[i].end());
+    }
+
+    // 3) Find Bridges
+    vector<int> disc(n, -1), low(n, -1), parent(n, -1);
+    vector<pair<int,int>> bridges;
+    int timer = 0;
+
+    for (int i = 0; i < n; i++) {
+        if (disc[i] == -1) {
+            bridgeDfs(i, timer, adj, disc, low, parent, bridges);
+        }
+    }
+
+    // 4) Find Busiest & Isolated
+    vector<int> isolatedIdx;
+    vector<int> busiestIdx;
+    int maxTotal = -1;
+
+    for (int i = 0; i < n; i++) {
+        int total = indeg[i] + outdeg[i];
+        if (total == 0) isolatedIdx.push_back(i);
+        
+        if (total > maxTotal) {
+            maxTotal = total;
+            busiestIdx.clear();
+            busiestIdx.push_back(i);
+        } else if (total == maxTotal) {
+            busiestIdx.push_back(i);
+        }
+    }
+
+    // 5) Print Results
+    cout << "\n--- 📊 NETWORK HEALTH OVERVIEW (Advanced) ---" << endl;
+    cout << "Total Stations: " << n << endl;
+
+    cout << "\n🏆 Busiest Station(s) (In + Out Connections):" << endl;
+    for (int i : busiestIdx) {
+        cout << "   - " << idxToName[i] << " (Total: " << maxTotal << ")" << endl;
+    }
+
+    cout << "\n⚠️  Isolated Stations (Total Disconnected):" << endl;
+    if (isolatedIdx.empty()) {
+        cout << "   (None - Network is connected)" << endl;
+    } else {
+        for (int i : isolatedIdx) cout << "   - " << idxToName[i] << endl;
+    }
+
+    cout << "\n🌉 Critical Links (Bridges):" << endl;
+    cout << "   (Removing these tracks would split the network)" << endl;
+    if (bridges.empty()) {
+        cout << "   (None - Network has redundant paths)" << endl;
+    } else {
+        for (auto [u, v] : bridges) {
+            cout << "   - " << idxToName[u] << " <--> " << idxToName[v] << endl;
+        }
+    }
+    cout << "---------------------------------------------" << endl;
 }
 
 // Save stations and tracks to CSV files
