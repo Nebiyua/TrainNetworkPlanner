@@ -1,37 +1,37 @@
-Addis Ababa,Jimma,350,270
-Addis Ababa,Ambo,120,90
-Addis Ababa,Dessie,400,300
-Addis Ababa,Bahir Dar,500,360
 Addis Ababa,Mojo,70,50
-Adama,Dire Dawa,350,240
+Addis Ababa,Bahir Dar,500,360
+Addis Ababa,Dessie,400,300
+Addis Ababa,Ambo,120,90
+Addis Ababa,Jimma,350,270
 Adama,Mojo,25,20
-Mojo,Hawassa,200,150
-Mojo,Adama,25,20
+Adama,Dire Dawa,350,240
 Mojo,Addis Ababa,70,50
-Dire Dawa,Jijiga,105,90
-Dire Dawa,Dewele,220,160
+Mojo,Adama,25,20
+Mojo,Hawassa,200,150
 Dire Dawa,Adama,350,240
+Dire Dawa,Dewele,220,160
+Dire Dawa,Jijiga,105,90
 Dewele,Dire Dawa,220,160
-Bahir Dar,Gondar,175,130
 Bahir Dar,Addis Ababa,500,360
-Axum,Mekelle,190,140
+Bahir Dar,Gondar,175,130
 Axum,Gondar,360,280
+Axum,Mekelle,190,140
 Arba Minch,Hawassa,280,210
-Ambo,Nekemte,210,160
 Ambo,Addis Ababa,120,90
-Dessie,Semera,240,180
-Dessie,Mekelle,350,260
+Ambo,Nekemte,210,160
 Dessie,Addis Ababa,400,300
+Dessie,Mekelle,350,260
+Dessie,Semera,240,180
 Bale,Nekemte,450,500
-Gondar,Axum,360,280
 Gondar,Bahir Dar,175,130
+Gondar,Axum,360,280
 Gambella,Nekemte,380,300
-Mekelle,Dessie,350,260
 Mekelle,Axum,190,140
-Hawassa,Arba Minch,280,210
+Mekelle,Dessie,350,260
 Hawassa,Mojo,200,150
+Hawassa,Arba Minch,280,210
 Jijiga,Dire Dawa,105,90
 Jimma,Addis Ababa,350,270
-Nekemte,Gambella,380,300
 Nekemte,Ambo,210,160
+Nekemte,Gambella,380,300
 Semera,Dessie,240,180

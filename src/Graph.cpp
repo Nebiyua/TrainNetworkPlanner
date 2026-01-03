@@ -11,12 +11,14 @@
 
 using namespace std;
 
-Graph::Graph() : nextId(1) {} // Start IDs from 1
+Graph::Graph() : nextId(1) {} // Initialize station IDs starting from 1
 
-// Add a new station
+// --- STATION & TRACK MANAGEMENT ---
+
+// Add a new station to the registry
 void Graph::addStation(string name, string code) {
-    stationRegistry.addStation(name, code, nextId);
-    actionHistory.push("Added Station: " + name);
+    stationRegistry.addStation(name, code, nextId);          // Insert into BST
+    actionHistory.push("Added Station: " + name);           // Log action
     cout << "Success: Station '" << name << "' added with ID " << nextId << endl;
     nextId++;
 }
@@ -29,12 +31,12 @@ void Graph::addTrack(string fromStation, string toStation, int dist, int time) {
     if (!sourceNode) { cout << "Error: Source station '" << fromStation << "' not found!\n"; return; }
     if (!destNode) { cout << "Error: Destination station '" << toStation << "' not found!\n"; return; }
 
-    sourceNode->tracks.addTrack(destNode->data.id, dist, time);
+    sourceNode->tracks.addTrack(destNode->data.id, dist, time);   // Append to adjacency list
     actionHistory.push("Added Track: " + fromStation + " -> " + toStation);
     cout << "Success: Track added from " << fromStation << " to " << toStation << endl;
 }
 
-// List all stations alphabetically
+// List all stations alphabetically (inorder BST traversal)
 void Graph::listStations() {
     cout << "\n--- Network Stations (Alphabetical) ---\n";
     if (nextId == 1) {
@@ -44,65 +46,62 @@ void Graph::listStations() {
     stationRegistry.printAllStations();
 }
 
-// Check if there is a direct (1-hop) connection
+// Check if a direct (1-hop) connection exists
 bool Graph::isDirectlyConnected(string start, string end) {
     BSTNode* startNode = stationRegistry.searchStation(start);
     BSTNode* endNode = stationRegistry.searchStation(end);
     if (!startNode || !endNode) return false;
 
-    // Iterate through linked list to see if destination is there
+    // Traverse linked list of tracks from start station
     Track* current = startNode->tracks.getHead();
     while (current != nullptr) {
-        if (current->destinationStationId == endNode->data.id) {
-            return true; 
-        }
+        if (current->destinationStationId == endNode->data.id) return true;
         current = current->next;
     }
     return false;
 }
 
-// Show network health (Isolated stations, Busiest station)
+// --- NETWORK HEALTH & BRIDGES ---
+
+// Helper: DFS for bridge-finding (Tarjan's algorithm)
 void bridgeDfs(int u, int& timer, const vector<vector<int>>& adj, 
                vector<int>& disc, vector<int>& low, vector<int>& parent, 
-               vector<pair<int,int>>& bridges) {
+               vector<pair<int,int>>& bridges) 
+{
     disc[u] = low[u] = ++timer;
-    
+
     for (int v : adj[u]) {
-        if (v == parent[u]) continue; // Don't go back to parent immediately
-        
+        if (v == parent[u]) continue; // Ignore immediate parent
+
         if (disc[v] != -1) {
-            // Back-edge
+            // Back-edge: update low-link value
             low[u] = min(low[u], disc[v]);
         } else {
-            // Tree-edge
+            // Tree-edge: recurse
             parent[v] = u;
             bridgeDfs(v, timer, adj, disc, low, parent, bridges);
             low[u] = min(low[u], low[v]);
-            
-            // Bridge condition
-            if (low[v] > disc[u]) {
-                bridges.push_back({u, v});
-            }
+
+            // Identify bridge
+            if (low[v] > disc[u]) bridges.push_back({u, v});
         }
     }
 }
 
+// Display advanced network statistics: busiest stations, isolated stations, and bridges
 void Graph::displayNetworkStats() {
-    // 0) Collect all stations from BST
     vector<BSTNode*> nodes;
-    stationRegistry.collectNodes(nodes);
+    stationRegistry.collectNodes(nodes); // Collect all BST nodes
 
     if (nodes.empty()) {
         cout << "Network Health Overview: No stations in the network.\n";
         return;
     }
 
-    // 1) Build ID <-> index mapping
-    // We map arbitrary Station IDs (1, 5, 99) to a clean array index (0, 1, 2...)
     int n = (int)nodes.size();
-    unordered_map<int,int> idToIdx;
-    vector<int> idxToId(n);
-    vector<string> idxToName(n);
+    unordered_map<int,int> idToIdx;        // Map station IDs to array indices
+    vector<int> idxToId(n);                // Reverse mapping
+    vector<string> idxToName(n);           // Index -> station name
 
     for (int i = 0; i < n; i++) {
         int id = nodes[i]->data.id;
@@ -111,25 +110,21 @@ void Graph::displayNetworkStats() {
         idxToName[i] = nodes[i]->data.name;
     }
 
-    // 2) Compute Degrees & Build Undirected Adjacency for Bridges
+    // Compute in/out-degrees & build undirected adjacency for bridge detection
     vector<int> indeg(n, 0), outdeg(n, 0);
     vector<unordered_set<int>> undirectedNbrSet(n);
 
     for (int i = 0; i < n; i++) {
         BSTNode* uNode = nodes[i];
-        
         Track* t = uNode->tracks.getHead();
         while (t != nullptr) {
             int vId = t->destinationStationId;
-
             if (idToIdx.count(vId)) {
                 int u = i;
                 int v = idToIdx[vId];
+                outdeg[u]++; indeg[v]++;
 
-                outdeg[u]++;
-                indeg[v]++;
-
-                // For bridges, we treat graph as undirected
+                // For bridge detection, treat graph as undirected
                 undirectedNbrSet[u].insert(v);
                 undirectedNbrSet[v].insert(u);
             }
@@ -137,32 +132,24 @@ void Graph::displayNetworkStats() {
         }
     }
 
-    // Convert sets to vector for DFS
+    // Convert sets to vectors for DFS
     vector<vector<int>> adj(n);
-    for (int i = 0; i < n; i++) {
-        adj[i].assign(undirectedNbrSet[i].begin(), undirectedNbrSet[i].end());
-    }
+    for (int i = 0; i < n; i++) adj[i].assign(undirectedNbrSet[i].begin(), undirectedNbrSet[i].end());
 
-    // 3) Find Bridges
+    // Find bridges using DFS
     vector<int> disc(n, -1), low(n, -1), parent(n, -1);
     vector<pair<int,int>> bridges;
     int timer = 0;
+    for (int i = 0; i < n; i++)
+        if (disc[i] == -1) bridgeDfs(i, timer, adj, disc, low, parent, bridges);
 
-    for (int i = 0; i < n; i++) {
-        if (disc[i] == -1) {
-            bridgeDfs(i, timer, adj, disc, low, parent, bridges);
-        }
-    }
-
-    // 4) Find Busiest & Isolated
+    // Identify busiest and isolated stations
     vector<int> isolatedIdx;
     vector<int> busiestIdx;
     int maxTotal = -1;
-
     for (int i = 0; i < n; i++) {
         int total = indeg[i] + outdeg[i];
         if (total == 0) isolatedIdx.push_back(i);
-        
         if (total > maxTotal) {
             maxTotal = total;
             busiestIdx.clear();
@@ -172,35 +159,27 @@ void Graph::displayNetworkStats() {
         }
     }
 
-    // 5) Print Results
+    // Print Network Health Summary
     cout << "\n--- 📊 NETWORK HEALTH OVERVIEW (Advanced) ---" << endl;
     cout << "Total Stations: " << n << endl;
 
     cout << "\n🏆 Busiest Station(s) (In + Out Connections):" << endl;
-    for (int i : busiestIdx) {
-        cout << "   - " << idxToName[i] << " (Total: " << maxTotal << ")" << endl;
-    }
+    for (int i : busiestIdx) cout << "   - " << idxToName[i] << " (Total: " << maxTotal << ")" << endl;
 
     cout << "\n⚠️  Isolated Stations (Total Disconnected):" << endl;
-    if (isolatedIdx.empty()) {
-        cout << "   (None - Network is connected)" << endl;
-    } else {
-        for (int i : isolatedIdx) cout << "   - " << idxToName[i] << endl;
-    }
+    if (isolatedIdx.empty()) cout << "   (None - Network is connected)" << endl;
+    else for (int i : isolatedIdx) cout << "   - " << idxToName[i] << endl;
 
     cout << "\n🌉 Critical Links (Bridges):" << endl;
     cout << "   (Removing these tracks would split the network)" << endl;
-    if (bridges.empty()) {
-        cout << "   (None - Network has redundant paths)" << endl;
-    } else {
-        for (auto [u, v] : bridges) {
-            cout << "   - " << idxToName[u] << " <--> " << idxToName[v] << endl;
-        }
-    }
+    if (bridges.empty()) cout << "   (None - Network has redundant paths)" << endl;
+    else for (auto [u, v] : bridges) cout << "   - " << idxToName[u] << " <--> " << idxToName[v] << endl;
     cout << "---------------------------------------------" << endl;
 }
 
-// Save stations and tracks to CSV files
+// --- FILE I/O ---
+
+// Save stations and tracks to CSV
 void Graph::saveData() {
     ofstream stationFile("data/stations.csv");
     if (stationFile.is_open()) {
@@ -221,7 +200,7 @@ void Graph::saveData() {
     }
 }
 
-// Load stations and tracks from CSV files
+// Load stations and tracks from CSV
 void Graph::loadData() {
     string line;
 
@@ -258,16 +237,16 @@ void Graph::loadData() {
                     BSTNode* src = stationRegistry.searchStation(from);
                     BSTNode* dst = stationRegistry.searchStation(to);
                     if (src && dst) src->tracks.addTrack(dst->data.id, dist, time);
-                } catch (...) {
-                    continue; // Skip invalid lines
-                }
+                } catch (...) { continue; } // Skip invalid lines
             }
         }
         trackFile.close();
     }
 }
 
-// BFS to check if a path exists between two stations
+// --- PATH & ROUTE FINDING ---
+
+// BFS to check if any path exists (connectivity)
 bool Graph::isPathExisting(string start, string end) {
     BSTNode* startNode = stationRegistry.searchStation(start);
     BSTNode* endNode = stationRegistry.searchStation(end);
@@ -288,14 +267,11 @@ bool Graph::isPathExisting(string start, string end) {
         BSTNode* currentNode = stationRegistry.searchStationById(currentId);
         if (!currentNode) continue;
 
+        // Traverse all neighbors
         for (Track* track = currentNode->tracks.getHead(); track; track = track->next) {
             int neighborId = track->destinationStationId;
-            
-            // Check if visited (simple vector find)
-            bool found = false;
-            for(int v : visited) if(v == neighborId) found = true;
-
-            if (!found) {
+            // Skip if already visited
+            if (find(visited.begin(), visited.end(), neighborId) == visited.end()) {
                 visited.push_back(neighborId);
                 q.enqueue(neighborId);
             }
@@ -304,36 +280,29 @@ bool Graph::isPathExisting(string start, string end) {
     return false;
 }
 
-// Dijkstra Algorithm: Supports optimization by Time or Distance
+// Dijkstra Algorithm: finds shortest path by time or distance
 void Graph::getShortestPath(string start, string end, bool byTime) {
     BSTNode* startNode = stationRegistry.searchStation(start);
     BSTNode* endNode = stationRegistry.searchStation(end);
-    if (!startNode || !endNode) {
-        cout << "One of the stations does not exist.\n";
-        return;
-    }
+    if (!startNode || !endNode) { cout << "One of the stations does not exist.\n"; return; }
 
     int startId = startNode->data.id;
     int endId = endNode->data.id;
 
-    map<int, int> dist;          // Shortest distance/time found
-    map<int, int> parent;        // For path reconstruction
-    map<int, bool> visited;
+    map<int,int> dist;    // Shortest distance/time found so far
+    map<int,int> parent;  // For path reconstruction
+    map<int,bool> visited;
 
     dist[startId] = 0;
 
-    // Run enough iterations to cover the graph
-    for (int i = 0; i < 100; i++) { 
+    // Run iterations to cover all reachable nodes
+    for (int i = 0; i < 100; i++) {
         int u = -1;
         int minVal = INT_MAX;
 
-        // Find closest unvisited node
-        for (auto const& [id, d] : dist) {
-            if (!visited[id] && d < minVal) {
-                minVal = d;
-                u = id;
-            }
-        }
+        // Pick closest unvisited node
+        for (auto const& [id,d] : dist)
+            if (!visited[id] && d < minVal) { minVal = d; u = id; }
 
         if (u == -1 || u == endId) break;
         visited[u] = true;
@@ -341,47 +310,44 @@ void Graph::getShortestPath(string start, string end, bool byTime) {
         BSTNode* uNode = stationRegistry.searchStationById(u);
         if (!uNode) continue;
 
-        // Relax neighbors
+        // Relax all neighbors
         for (Track* track = uNode->tracks.getHead(); track; track = track->next) {
             int v = track->destinationStationId;
-            // Toggle metric based on user choice
             int weight = byTime ? track->weightTime : track->weightDistance;
-
             if (dist.find(v) == dist.end()) dist[v] = INT_MAX;
 
             if (dist[u] + weight < dist[v]) {
                 dist[v] = dist[u] + weight;
-                parent[v] = u; // Track the path
+                parent[v] = u; // Record path
             }
         }
     }
 
+    // Check if path exists
     if (dist.find(endId) == dist.end() || dist[endId] == INT_MAX) {
         cout << "No route exists between " << start << " and " << end << endl;
-    } else {
-        string unit = byTime ? "minutes" : "km";
-        cout << "Result: " << dist[endId] << " " << unit << endl;
-
-        // Reconstruct path (without using <stack> header)
-        vector<string> path;
-        int curr = endId;
-        
-        // Backtrack from end to start
-        while (curr != startId) {
-            BSTNode* node = stationRegistry.searchStationById(curr);
-            path.push_back(node->data.name);
-            curr = parent[curr];
-        }
-        // Add start node
-        BSTNode* sNode = stationRegistry.searchStationById(startId);
-        path.push_back(sNode->data.name);
-
-        // Print in reverse (Start -> End)
-        cout << "Path: ";
-        for (int i = path.size() - 1; i >= 0; i--) {
-            cout << path[i];
-            if (i > 0) cout << " -> ";
-        }
-        cout << endl;
+        return;
     }
+
+    string unit = byTime ? "minutes" : "km";
+    cout << "Result: " << dist[endId] << " " << unit << endl;
+
+    // Reconstruct path from end -> start
+    vector<string> path;
+    int curr = endId;
+    while (curr != startId) {
+        BSTNode* node = stationRegistry.searchStationById(curr);
+        path.push_back(node->data.name);
+        curr = parent[curr];
+    }
+    // Add start station
+    path.push_back(startNode->data.name);
+
+    // Print path Start -> End
+    cout << "Path: ";
+    for (int i = path.size()-1; i >= 0; i--) {
+        cout << path[i];
+        if (i > 0) cout << " -> ";
+    }
+    cout << endl;
 }
