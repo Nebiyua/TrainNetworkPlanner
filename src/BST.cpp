@@ -146,3 +146,15 @@ void BST::saveTracksRecursive(BSTNode* node, ofstream& outFile) {
     saveTracksRecursive(node->left, outFile);
     saveTracksRecursive(node->right, outFile);
 }
+
+void BST::collectNodes(vector<BSTNode*>& nodes) {
+    collectNodesRecursive(root, nodes);
+}
+
+void BST::collectNodesRecursive(BSTNode* node, vector<BSTNode*>& nodes) {
+    if (node != nullptr) {
+        collectNodesRecursive(node->left, nodes);
+        nodes.push_back(node);
+        collectNodesRecursive(node->right, nodes);
+    }
+}
