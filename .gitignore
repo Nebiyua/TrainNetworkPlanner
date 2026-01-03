@@ -39,3 +39,12 @@
 
 # debug information files
 *.dwo
+
+# --- Project Specific Executables ---
+train_planner
+app
+debug_app
+auto_test
+core_test
+test_tools
+train_v2
