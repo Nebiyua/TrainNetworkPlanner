@@ -5,28 +5,26 @@
 #include "Station.h"
 #include "LinkedList.h"
 
+// Node of the Binary Search Tree
 struct BSTNode {
     Station data;
-    LinkedList tracks; // COMPOSITION: Each station node has a list of tracks
+    LinkedList tracks;   // Tracks connected to this station
     BSTNode* left;
     BSTNode* right;
 
-    BSTNode(Station s) {
-        data = s;
-        left = nullptr;
-        right = nullptr;
-    }
+    BSTNode(Station s) : data(s), left(nullptr), right(nullptr) {}
 };
 
+// Binary Search Tree for stations (ordered by name)
 class BST {
 private:
     BSTNode* root;
 
-    // Helpers
+    // Internal helpers
     BSTNode* insertRecursive(BSTNode* node, Station s);
     BSTNode* searchRecursive(BSTNode* node, string name);
     BSTNode* searchByIdRecursive(BSTNode* node, int id);
-    void inorderRecursive(BSTNode* node); // For printing A-Z
+    void inorderRecursive(BSTNode* node);
     void deleteTree(BSTNode* node);
     void saveStationsRecursive(BSTNode* node, ofstream& outFile);
     void saveTracksRecursive(BSTNode* node, ofstream& outFile);
@@ -39,11 +37,12 @@ public:
     BSTNode* searchStation(string name);
     BSTNode* searchStationById(int id);
     void printAllStations();
+
     void saveStationsToFile(ofstream& outFile);
     void saveTracksToFile(ofstream& outFile);
-    
-    // We need to expose the root for advanced Graph algorithms later
-    BSTNode* getRoot(); 
+
+    // Needed for later graph algorithms
+    BSTNode* getRoot();
 };
 
 #endif

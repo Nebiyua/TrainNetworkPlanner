@@ -3,7 +3,7 @@
 
 #include "BST.h"
 #include "Stack.h"
-#include "Queue.h" // Ensure this is here
+#include "Queue.h"
 #include <vector>
 #include <string>
 
@@ -11,31 +11,27 @@ using namespace std;
 
 class Graph {
 private:
-    BST stationRegistry; 
-    Stack actionHistory; 
-    int nextId;          
+    BST stationRegistry;   // Stores all stations
+    Stack actionHistory;   // Tracks user actions
+    int nextId;            // Auto-increment station ID
 
 public:
     Graph();
 
-    // 1. Basic Operations
+    // Basic operations
     void addStation(string name, string code);
     void addTrack(string fromStation, string toStation, int dist, int time);
     void listStations();
 
-    // 2. Connectivity (BFS)
-    // Old placeholder (can keep or remove)
-    void checkConnectivity(); 
-    // NEW FUNCTION:
+    // Connectivity (BFS)
+    void checkConnectivity();
     bool isPathExisting(string start, string end);
 
-    // 3. Shortest Path (Dijkstra)
-    // Old placeholder (can keep or remove)
+    // Shortest path
     void getShortestPath(string start, string end);
-    // NEW FUNCTION:
     void getFastestRoute(string start, string end);
 
-    // 4. File I/O
+    // File I/O
     void loadData();
     void saveData();
 };

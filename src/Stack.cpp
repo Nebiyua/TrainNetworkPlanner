@@ -3,47 +3,40 @@
 
 using namespace std;
 
-Stack::Stack() {
-    top = nullptr;
-}
+Stack::Stack() : top(nullptr) {}
 
+// Free all nodes on destruction
 Stack::~Stack() {
-    while (!isEmpty()) {
-        pop();
-    }
+    while (!isEmpty()) pop();
 }
 
+// Push a new action onto the stack
 void Stack::push(string cmd) {
-    StackNode* newNode = new StackNode;
-    newNode->action = cmd;
-    
-    newNode->next = top;
+    StackNode* newNode = new StackNode{ cmd, top };
     top = newNode;
 }
 
+// Pop the top action from the stack
 string Stack::pop() {
-    if (isEmpty()) {
-        return "";
-    }
-    
+    if (isEmpty()) return "";
+
     StackNode* temp = top;
     string result = temp->action;
     top = top->next;
-    
     delete temp;
-    
+
     return result;
 }
 
+// Check if stack is empty
 bool Stack::isEmpty() {
-    return (top == nullptr);
+    return top == nullptr;
 }
 
+// Print stack from top to bottom
 void Stack::printHistory() {
-    StackNode* current = top;
     cout << "--- Action History (Latest First) ---" << endl;
-    while (current != nullptr) {
+    for (StackNode* current = top; current; current = current->next) {
         cout << ">> " << current->action << endl;
-        current = current->next;
     }
 }

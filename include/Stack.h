@@ -3,6 +3,7 @@
 
 #include <string>
 #include <iostream>
+
 using namespace std;
 
 struct StackNode {
@@ -17,7 +18,7 @@ private:
 public:
     Stack();
     ~Stack();
-    
+
     void push(string action);
     string pop();
     bool isEmpty();

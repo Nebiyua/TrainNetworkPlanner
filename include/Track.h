@@ -2,17 +2,16 @@
 #define TRACK_H
 
 struct Track {
-    int destinationStationId; // The ID of the station we are going to
-    int weightDistance;       // KM
-    int weightTime;           // Minutes
-    Track* next;              // Pointer to the next track in the list
+    int destinationStationId;
+    int weightDistance; //Km
+    int weightTime; //Minutes
+    Track* next;
 
-    Track(int dest, int dist, int time) {
-        destinationStationId = dest;
-        weightDistance = dist;
-        weightTime = time;
-        next = nullptr;
-    }
+    Track(int dest, int dist, int time)
+        : destinationStationId(dest),
+          weightDistance(dist),
+          weightTime(time),
+          next(nullptr) {}
 };
 
 #endif

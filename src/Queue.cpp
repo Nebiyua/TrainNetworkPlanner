@@ -1,27 +1,20 @@
 #include "../include/Queue.h"
-#include <iostream>
 
-using namespace std;
+Queue::Queue() : front(nullptr), rear(nullptr) {}
 
-Queue::Queue() {
-    front = nullptr;
-    rear = nullptr;
-}
-
+// Add an element to the back of the queue
 void Queue::enqueue(int id) {
-    QueueNode* newNode = new QueueNode;
-    newNode->stationId = id;
-    newNode->next = nullptr;
+    QueueNode* newNode = new QueueNode{ id, nullptr };
 
     if (isEmpty()) {
-        front = newNode;
-        rear = newNode;
+        front = rear = newNode;
     } else {
         rear->next = newNode;
         rear = newNode;
     }
 }
 
+// Remove and return the element at the front
 int Queue::dequeue() {
     if (isEmpty()) return -1;
 
@@ -29,15 +22,13 @@ int Queue::dequeue() {
     int data = temp->stationId;
 
     front = front->next;
-
-    if (front == nullptr) {
-        rear = nullptr;
-    }
+    if (!front) rear = nullptr;
 
     delete temp;
     return data;
 }
 
+// Check if the queue is empty
 bool Queue::isEmpty() {
-    return (front == nullptr);
+    return front == nullptr;
 }

@@ -1,14 +1,12 @@
 #include <iostream>
 #include <limits>
-#include <cstdlib> // For system()
+#include <cstdlib>    // system()
 #include "../include/Graph.h"
 
 using namespace std;
 
-// --- HELPER FUNCTIONS ---
-
+// Clear console screen
 void clearScreen() {
-    // Check operating system to run the correct clear command
     #ifdef _WIN32
         system("cls");
     #else
@@ -16,42 +14,38 @@ void clearScreen() {
     #endif
 }
 
+// Wait for Enter key
 void pause() {
-    cout << "\n\033[1;33m[Press Enter to return to Main Menu...]\033[0m";
-    // Check if buffer is empty, if not ignore, then wait for get()
-    cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Ensure buffer is clear
-    cin.get(); // Wait for keypress
+    cout << "\n[Press Enter to return to Main Menu...]";
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    cin.get();
 }
 
+// Print main menu
 void printBanner() {
-    cout << "\033[1;36m==============================================\033[0m" << endl;
-    cout << "\033[1;32m   🚄 ETHIO-TRAIN NETWORK PLANNER (v2.0) 🚄   \033[0m" << endl;
-    cout << "\033[1;36m==============================================\033[0m" << endl;
-    cout << "  [1] Add Station       " << endl;
-    cout << "  [2] Add Track         " << endl;
-    cout << "  [3] List Network      " << endl;
-    cout << "  [4] Check Connectivity" << endl;
-    cout << "  [5] Find Fastest Route" << endl;
-    cout << "  [6] Save & Exit       " << endl;
-    cout << "\033[1;36m==============================================\033[0m" << endl;
-    cout << "\033[1;33mSelect Option > \033[0m";
+    cout << "\n==============================================\n";
+    cout << "   ETHIO-TRAIN NETWORK PLANNER (v2.0)         \n";
+    cout << "==============================================\n";
+    cout << "  [1] Add Station       \n";
+    cout << "  [2] Add Track         \n";
+    cout << "  [3] List Network      \n";
+    cout << "  [4] Check Connectivity\n";
+    cout << "  [5] Find Fastest Route\n";
+    cout << "  [6] Save & Exit       \n";
+    cout << "==============================================\n";
+    cout << "Select Option > ";
 }
 
 int main() {
     Graph network;
     int choice;
-    
-    // Auto-load data (Quietly)
-    // We can redirect cout to silence the "Loading..." messages if we wanted,
-    // but for now, let's just clear the screen immediately after loading.
-    network.loadData();
-    
+
+    network.loadData(); 
+
     while (true) {
-        // 1. START FRESH
         clearScreen();
         printBanner();
-        
-        // 2. GET INPUT
+
         if (!(cin >> choice)) {
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -60,70 +54,101 @@ int main() {
 
         if (choice == 6) {
             clearScreen();
-            cout << "\n\033[1;32mSaving Data...\033[0m" << endl;
-            network.saveData(); 
-            cout << "Goodbye!" << endl;
+            cout << "\nSaving Data...\n";
+            network.saveData();
+            cout << "Shutdown complete. Goodbye!\n";
             break;
         }
 
         string s1, s2, code;
         int dist, time;
 
-        // 3. EXECUTE ON A FRESH SCREEN
         switch (choice) {
-            case 1:
+            case 1: // Add Station
                 clearScreen();
-                cout << "\n--- \033[1;34mADD NEW STATION\033[0m ---" << endl;
-                cout << "Enter Name: "; 
-                cin.ignore(); getline(cin, s1);
-                cout << "Enter Code: "; cin >> code;
+                cout << "\n--- ADD NEW STATION ---\n";
+                cout << "(Enter '0' to cancel)\n";
+                
+                cout << "Name: "; 
+                cin.ignore(); 
+                getline(cin, s1);
+                
+                if (s1 == "0") break; // Cancel logic
+
+                cout << "Code: "; 
+                cin >> code;
                 network.addStation(s1, code);
-                pause(); // Wait so user can see "Success"
+                pause();
                 break;
 
-            case 2:
+            case 2: // Add Track
                 clearScreen();
-                cout << "\n--- \033[1;34mADD NEW TRACK\033[0m ---" << endl;
-                cout << "From: "; cin.ignore(); getline(cin, s1);
-                cout << "To:   "; getline(cin, s2);
+                cout << "\n--- ADD NEW TRACK ---\n";
+                cout << "(Enter '0' to cancel)\n";
+
+                cout << "From: "; 
+                cin.ignore(); 
+                getline(cin, s1);
+                if (s1 == "0") break;
+
+                cout << "To:   "; 
+                getline(cin, s2);
+                if (s2 == "0") break;
+
                 cout << "Dist: "; cin >> dist;
                 cout << "Time: "; cin >> time;
                 network.addTrack(s1, s2, dist, time);
                 pause();
                 break;
 
-            case 3:
+            case 3: // List Stations
                 clearScreen();
-                // We don't need a header here, listStations has one
+                // listStations function handles its own printing
                 network.listStations();
                 pause();
                 break;
 
-            case 4:
+            case 4: // Check Connectivity
                 clearScreen();
-                cout << "\n--- \033[1;34mCHECK CONNECTIVITY\033[0m ---" << endl;
-                cout << "Start: "; cin.ignore(); getline(cin, s1);
-                cout << "End:   "; getline(cin, s2);
-                cout << "\nAnalyzing network..." << endl;
-                if (network.isPathExisting(s1, s2)) 
-                    cout << "✅ \033[1;32mYES! Connection exists.\033[0m" << endl;
-                else 
-                    cout << "❌ \033[1;31mNO! No path found.\033[0m" << endl;
+                cout << "\n--- CHECK CONNECTIVITY ---\n";
+                cout << "(Enter '0' to cancel)\n";
+
+                cout << "Start: "; 
+                cin.ignore(); 
+                getline(cin, s1);
+                if (s1 == "0") break;
+
+                cout << "End:   "; 
+                getline(cin, s2);
+                
+                cout << "\nAnalyzing network...\n";
+                if (network.isPathExisting(s1, s2)) {
+                    cout << "Result: Connection CONFIRMED.\n";
+                } else {
+                    cout << "Result: NO connection found.\n";
+                }
                 pause();
                 break;
 
-            case 5:
+            case 5: // Fastest Route
                 clearScreen();
-                cout << "\n--- \033[1;34mCALCULATE FASTEST ROUTE\033[0m ---" << endl;
-                cout << "Start: "; cin.ignore(); getline(cin, s1);
-                cout << "End:   "; getline(cin, s2);
-                cout << "\nRunning Dijkstra Algorithm..." << endl;
+                cout << "\n--- CALCULATE FASTEST ROUTE ---\n";
+                cout << "(Enter '0' to cancel)\n";
+
+                cout << "Start: "; 
+                cin.ignore(); 
+                getline(cin, s1);
+                if (s1 == "0") break;
+
+                cout << "End:   "; 
+                getline(cin, s2);
+                
+                cout << "\nRunning Dijkstra Algorithm...\n";
                 network.getFastestRoute(s1, s2);
                 pause();
                 break;
 
-            default:
-                // If invalid choice, just loop back
+            default: 
                 break;
         }
     }
