@@ -1,25 +1,89 @@
 #include <iostream>
+#include <limits>
 #include "../include/Graph.h"
 
 using namespace std;
 
+void printBanner() {
+    cout << "\n==============================================" << endl;
+    cout << "   🚄 ETHIO-TRAIN NETWORK PLANNER (v1.0) 🚄   " << endl;
+    cout << "==============================================" << endl;
+    cout << "COMMANDS:" << endl;
+    cout << "  [1] Add Station       [2] Add Track" << endl;
+    cout << "  [3] List Network      [4] Check Connectivity" << endl;
+    cout << "  [5] Find Fastest Route" << endl;
+    cout << "  [6] Exit              [0] Show Menu Again" << endl;
+    cout << "==============================================" << endl;
+}
+
 int main() {
-    Graph myNetwork;
-    myNetwork.addStation("A", "A");
-    myNetwork.addStation("B", "B");
-    myNetwork.addStation("C", "C");
-
-    // A -> B (60 mins), B -> C (60 mins) = Total 120
-    myNetwork.addTrack("A", "B", 100, 60);
-    myNetwork.addTrack("B", "C", 100, 60);
+    Graph network;
+    int choice;
     
-    // A -> C Direct (100 mins) = Faster!
-    myNetwork.addTrack("A", "C", 200, 100);
+    // Optional: Load data if you implement File I/O later
+    // network.loadData();
 
-    cout << "Checking connectivity A -> C: " << myNetwork.isPathExisting("A", "C") << endl;
-    
-    cout << "Calculating Fastest Route A -> C..." << endl;
-    myNetwork.getFastestRoute("A", "C"); // Should pick the Direct 100min route, not the 120min one
+    printBanner();
+
+    while (true) {
+        cout << "\nTrainPlanner > ";
+        
+        if (!(cin >> choice)) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            continue;
+        }
+        cin.ignore(); // Consume newline
+
+        if (choice == 6) {
+            // network.saveData(); 
+            cout << "Shutting down... Goodbye!" << endl;
+            break;
+        }
+
+        string s1, s2, code;
+        int dist, time;
+
+        switch (choice) {
+            case 0:
+                printBanner();
+                break;
+
+            case 1:
+                cout << "   Name: "; getline(cin, s1);
+                cout << "   Code: "; cin >> code;
+                network.addStation(s1, code);
+                break;
+
+            case 2:
+                cout << "   From: "; getline(cin, s1);
+                cout << "   To:   "; getline(cin, s2);
+                cout << "   Dist: "; cin >> dist;
+                cout << "   Time: "; cin >> time;
+                network.addTrack(s1, s2, dist, time);
+                break;
+
+            case 3:
+                network.listStations();
+                break;
+
+            case 4:
+                cout << "   Start: "; getline(cin, s1);
+                cout << "   End:   "; getline(cin, s2);
+                if (network.isPathExisting(s1, s2)) cout << "   ✅ Connection Confirmed." << endl;
+                else cout << "   ❌ No connection found." << endl;
+                break;
+
+            case 5:
+                cout << "   Start: "; getline(cin, s1);
+                cout << "   End:   "; getline(cin, s2);
+                network.getFastestRoute(s1, s2);
+                break;
+
+            default:
+                cout << "   Unknown command. Type 0 for help." << endl;
+        }
+    }
 
     return 0;
 }
