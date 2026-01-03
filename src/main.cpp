@@ -24,7 +24,7 @@ void pause() {
 // Print main menu
 void printBanner() {
     cout << "\n==============================================\n";
-    cout << "   ETHIO-TRAIN NETWORK PLANNER (v2.0)         \n";
+    cout << "   ETHIO-TRAIN NETWORK PLANNER                \n";
     cout << "==============================================\n";
     cout << "  [1] Add Station       \n";
     cout << "  [2] Add Track         \n";
