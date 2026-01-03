@@ -1,6 +1,7 @@
 #ifndef BST_H
 #define BST_H
 
+#include <fstream>
 #include "Station.h"
 #include "LinkedList.h"
 
@@ -27,6 +28,8 @@ private:
     BSTNode* searchByIdRecursive(BSTNode* node, int id);
     void inorderRecursive(BSTNode* node); // For printing A-Z
     void deleteTree(BSTNode* node);
+    void saveStationsRecursive(BSTNode* node, ofstream& outFile);
+    void saveTracksRecursive(BSTNode* node, ofstream& outFile);
 
 public:
     BST();
@@ -36,6 +39,8 @@ public:
     BSTNode* searchStation(string name);
     BSTNode* searchStationById(int id);
     void printAllStations();
+    void saveStationsToFile(ofstream& outFile);
+    void saveTracksToFile(ofstream& outFile);
     
     // We need to expose the root for advanced Graph algorithms later
     BSTNode* getRoot(); 

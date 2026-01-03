@@ -87,3 +87,49 @@ BSTNode* BST::searchByIdRecursive(BSTNode* node, int id) {
     
     return searchByIdRecursive(node->right, id);
 }
+
+// In src/BST.cpp - Add at the very bottom
+
+// --- SAVING STATIONS ---
+void BST::saveStationsToFile(ofstream& outFile) {
+    saveStationsRecursive(root, outFile);
+}
+
+void BST::saveStationsRecursive(BSTNode* node, ofstream& outFile) {
+    if (node != nullptr) {
+        // Format: Name,Code
+        outFile << node->data.name << "," << node->data.code << endl;
+        
+        saveStationsRecursive(node->left, outFile);
+        saveStationsRecursive(node->right, outFile);
+    }
+}
+
+// --- SAVING TRACKS ---
+void BST::saveTracksToFile(ofstream& outFile) {
+    saveTracksRecursive(root, outFile);
+}
+
+void BST::saveTracksRecursive(BSTNode* node, ofstream& outFile) {
+    if (node != nullptr) {
+        // Look at every track leaving this station
+        Track* currentTrack = node->tracks.getHead();
+        while (currentTrack != nullptr) {
+            // We need to find the destination NAME (we only have ID in the track)
+            // This is a bit inefficient (O(n)), but fine for saving files.
+            BSTNode* destNode = searchByIdRecursive(root, currentTrack->destinationStationId);
+            
+            if (destNode) {
+                // Format: FromName,ToName,Distance,Time
+                outFile << node->data.name << "," 
+                        << destNode->data.name << "," 
+                        << currentTrack->weightDistance << "," 
+                        << currentTrack->weightTime << endl;
+            }
+            currentTrack = currentTrack->next;
+        }
+        
+        saveTracksRecursive(node->left, outFile);
+        saveTracksRecursive(node->right, outFile);
+    }
+}

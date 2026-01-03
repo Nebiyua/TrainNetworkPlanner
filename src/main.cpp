@@ -21,7 +21,7 @@ int main() {
     int choice;
     
     // Optional: Load data if you implement File I/O later
-    // network.loadData();
+    network.loadData();
 
     printBanner();
 
@@ -36,7 +36,7 @@ int main() {
         cin.ignore(); // Consume newline
 
         if (choice == 6) {
-            // network.saveData(); 
+            network.saveData(); 
             cout << "Shutting down... Goodbye!" << endl;
             break;
         }

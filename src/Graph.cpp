@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <climits> // For INT_MAX (Infinity)
 #include <map>     // Easier to map ID -> Distance
+#include <fstream>  // For file reading/writing
+#include <sstream>  // For string splitting (parsing CSV)
 
 using namespace std;
 
@@ -55,8 +57,85 @@ void Graph::getShortestPath(string start, string end) {
     cout << "Feature coming soon..." << endl;
 }
 
-void Graph::loadData() {}
-void Graph::saveData() {}
+void Graph::saveData() {
+    // 1. Save Stations
+    ofstream stationFile("data/stations.csv");
+    if (stationFile.is_open()) {
+        stationRegistry.saveStationsToFile(stationFile);
+        stationFile.close();
+        cout << "💾 Saved stations to data/stations.csv" << endl;
+    } else {
+        cout << "❌ Error: Could not open stations.csv for writing." << endl;
+    }
+
+    // 2. Save Tracks
+    ofstream trackFile("data/tracks.csv");
+    if (trackFile.is_open()) {
+        stationRegistry.saveTracksToFile(trackFile);
+        trackFile.close();
+        cout << "💾 Saved tracks to data/tracks.csv" << endl;
+    } else {
+        cout << "❌ Error: Could not open tracks.csv for writing." << endl;
+    }
+}
+
+void Graph::loadData() {
+    // 1. Load Stations
+    ifstream stationFile("data/stations.csv");
+    string line;
+    
+    if (stationFile.is_open()) {
+        cout << "📂 Loading Stations..." << endl;
+        while (getline(stationFile, line)) {
+            stringstream ss(line);
+            string name, code;
+            
+            // Parse CSV: Name,Code
+            if (getline(ss, name, ',') && getline(ss, code, ',')) {
+                // Use internal add function so we don't spam "Success" messages
+                // Or just use the public one, but it will be noisy.
+                // Let's use the public one for now:
+                stationRegistry.addStation(name, code, nextId);
+                nextId++;
+            }
+        }
+        stationFile.close();
+    } else {
+        cout << "⚠️ No saved stations found (starting fresh)." << endl;
+    }
+
+    // 2. Load Tracks
+    ifstream trackFile("data/tracks.csv");
+    if (trackFile.is_open()) {
+        cout << "📂 Loading Tracks..." << endl;
+        while (getline(trackFile, line)) {
+            stringstream ss(line);
+            string from, to, distStr, timeStr;
+            
+            // Parse CSV: From,To,Dist,Time
+            if (getline(ss, from, ',') && 
+                getline(ss, to, ',') && 
+                getline(ss, distStr, ',') && 
+                getline(ss, timeStr, ',')) {
+                
+                try {
+                    int dist = stoi(distStr);
+                    int time = stoi(timeStr);
+                    
+                    // We need to re-link them manually
+                    BSTNode* src = stationRegistry.searchStation(from);
+                    BSTNode* dst = stationRegistry.searchStation(to);
+                    if (src && dst) {
+                        src->tracks.addTrack(dst->data.id, dist, time);
+                    }
+                } catch (...) {
+                    continue; // Skip bad lines
+                }
+            }
+        }
+        trackFile.close();
+    }
+}
 
 bool Graph::isPathExisting(string start, string end) {
     // 1. Get IDs
